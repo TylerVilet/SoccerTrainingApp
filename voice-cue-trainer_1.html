@@ -1,0 +1,1466 @@
+<title>Voice Cue Trainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Work+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f1e4;
+    --bg-alt: #eae3cd;
+    --surface: #ffffff;
+    --surface-2: #f0ead8;
+    --text: #182219;
+    --text-muted: #5c6a5d;
+    --border: #ddd3b7;
+    --accent: #e15a0b;
+    --accent-ink: #fff8f1;
+    --accent-soft: #fbe1cc;
+    --turf: #1c6b46;
+    --turf-soft: #dde9df;
+    --danger: #b23a2e;
+    --shadow: rgba(24, 34, 25, 0.14);
+    color-scheme: light;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0d1711;
+      --bg-alt: #122016;
+      --surface: #16241a;
+      --surface-2: #1c2c20;
+      --text: #edf2ea;
+      --text-muted: #92a394;
+      --border: #2b3e2f;
+      --accent: #ff8c47;
+      --accent-ink: #1a0d02;
+      --accent-soft: #3a2414;
+      --turf: #4cbd82;
+      --turf-soft: #163420;
+      --danger: #ff7263;
+      --shadow: rgba(0, 0, 0, 0.45);
+      color-scheme: dark;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #0d1711;
+    --bg-alt: #122016;
+    --surface: #16241a;
+    --surface-2: #1c2c20;
+    --text: #edf2ea;
+    --text-muted: #92a394;
+    --border: #2b3e2f;
+    --accent: #ff8c47;
+    --accent-ink: #1a0d02;
+    --accent-soft: #3a2414;
+    --turf: #4cbd82;
+    --turf-soft: #163420;
+    --danger: #ff7263;
+    --shadow: rgba(0, 0, 0, 0.45);
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+  }
+
+  body {
+    background:
+      repeating-linear-gradient(
+        100deg,
+        var(--bg) 0px,
+        var(--bg) 64px,
+        var(--bg-alt) 64px,
+        var(--bg-alt) 128px
+      );
+    color: var(--text);
+    font-family: "Work Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 20px 14px 40px;
+  }
+
+  .display {
+    font-family: "Anton", "Arial Narrow", system-ui, sans-serif;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+  }
+
+  .app {
+    width: 100%;
+    max-width: 460px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .app-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 4px 4px 0;
+  }
+
+  .app-header .wordmark {
+    font-size: 1.5rem;
+    color: var(--turf);
+    text-transform: uppercase;
+  }
+
+  .app-header .wordmark span {
+    color: var(--accent);
+  }
+
+  .app-header .tagline {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-align: right;
+    max-width: 130px;
+    line-height: 1.3;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    box-shadow: 0 6px 20px var(--shadow);
+  }
+
+  .view { display: none; flex-direction: column; gap: 16px; }
+  .view.active { display: flex; }
+
+  /* ---------- Buttons ---------- */
+  button {
+    font-family: inherit;
+    cursor: pointer;
+    border: none;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    border-radius: 12px;
+    padding: 13px 18px;
+    transition: transform 0.08s ease, filter 0.15s ease, background 0.15s ease;
+  }
+  .btn:active { transform: scale(0.97); }
+
+  .btn-primary { background: var(--accent); color: var(--accent-ink); }
+  .btn-primary:hover { filter: brightness(1.06); }
+
+  .btn-secondary {
+    background: var(--surface-2);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { filter: brightness(1.04); }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-muted);
+    padding: 8px 10px;
+  }
+  .btn-ghost:hover { color: var(--text); }
+
+  .btn-danger { background: transparent; color: var(--danger); padding: 8px 10px; }
+
+  .btn-block { width: 100%; }
+
+  .icon { width: 18px; height: 18px; flex: none; }
+  .icon-sm { width: 15px; height: 15px; }
+
+  /* ---------- Home / drill list ---------- */
+  #view-home .card { padding: 18px; }
+
+  .empty-state {
+    text-align: center;
+    padding: 26px 10px 10px;
+    color: var(--text-muted);
+  }
+  .empty-state .display {
+    font-size: 1.3rem;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .empty-state p { font-size: 0.88rem; margin: 0 0 18px; line-height: 1.45; }
+
+  .drill-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .drill-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px;
+    border-radius: 14px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+  }
+
+  .drill-card .info { flex: 1; min-width: 0; }
+  .drill-card .name {
+    font-weight: 700;
+    font-size: 0.98rem;
+    margin: 0 0 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .drill-card .meta {
+    font-size: 0.76rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .drill-card .actions { display: flex; align-items: center; gap: 2px; flex: none; }
+
+  .play-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--accent-ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+  }
+  .play-btn .icon { margin-left: 2px; }
+
+  /* ---------- Builder ---------- */
+  .view-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 2px 4px;
+  }
+  .view-head h2 {
+    font-family: "Anton", sans-serif;
+    font-weight: 400;
+    font-size: 1.2rem;
+    letter-spacing: 0.02em;
+    margin: 0;
+    flex: 1;
+  }
+
+  .field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 16px 18px;
+  }
+  .field-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+  }
+  .field-hint { font-size: 0.76rem; color: var(--text-muted); margin-top: -2px; }
+
+  input[type="text"], input[type="number"], select {
+    font-family: inherit;
+    font-size: 0.95rem;
+    padding: 11px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    width: 100%;
+  }
+  input:focus, select:focus, button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+
+  .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--turf-soft);
+    color: var(--turf);
+    border: 1px solid var(--turf);
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 7px 8px 7px 12px;
+    border-radius: 999px;
+  }
+  .chip button {
+    background: none;
+    color: inherit;
+    display: flex;
+    padding: 2px;
+    opacity: 0.75;
+  }
+  .chip button:hover { opacity: 1; }
+
+  .chip-suggest {
+    background: transparent;
+    border: 1px dashed var(--border);
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 999px;
+  }
+  .chip-suggest:hover { border-color: var(--accent); color: var(--accent); }
+
+  .add-cue-row { display: flex; gap: 8px; }
+  .add-cue-row input { flex: 1; }
+  .add-cue-row button {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0 16px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .switch-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .switch {
+    position: relative;
+    width: 42px;
+    height: 25px;
+    flex: none;
+    border-radius: 999px;
+    background: var(--border);
+    transition: background 0.15s ease;
+  }
+  .switch::after {
+    content: "";
+    position: absolute;
+    top: 3px; left: 3px;
+    width: 19px; height: 19px;
+    border-radius: 50%;
+    background: var(--surface);
+    transition: transform 0.15s ease;
+  }
+  .switch.on { background: var(--turf); }
+  .switch.on::after { transform: translateX(17px); }
+
+  .radio-row { display: flex; gap: 8px; }
+  .radio-pill {
+    flex: 1;
+    text-align: center;
+    padding: 9px 6px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+  .radio-pill.on {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .slider-label-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+  }
+  input[type="range"] {
+    width: 100%;
+    accent-color: var(--accent);
+  }
+
+  .divider { height: 1px; background: var(--border); margin: 0 18px; }
+
+  .builder-actions {
+    display: flex;
+    gap: 10px;
+    padding: 4px 18px 18px;
+  }
+  .builder-actions .btn { flex: 1; }
+
+  .validation-msg {
+    font-size: 0.8rem;
+    color: var(--danger);
+    display: none;
+    padding: 0 18px;
+    margin-top: -8px;
+  }
+  .validation-msg.show { display: block; }
+
+  /* ---------- Run view ---------- */
+  #view-run .card {
+    padding: 20px 18px 22px;
+    min-height: 62vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .run-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .run-top .drill-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .run-top .rep-count {
+    font-family: "Anton", sans-serif;
+    font-size: 1rem;
+    color: var(--turf);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .progress-track {
+    height: 6px;
+    border-radius: 999px;
+    background: var(--surface-2);
+    overflow: hidden;
+    margin-top: 10px;
+  }
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--accent);
+    border-radius: 999px;
+    transition: width 0.25s ease;
+  }
+
+  .cue-stage {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px 10px;
+  }
+
+  .cue-text {
+    font-family: "Anton", sans-serif;
+    font-weight: 400;
+    line-height: 0.95;
+    color: var(--text);
+    font-size: clamp(2.6rem, 16vw, 4.6rem);
+    text-wrap: balance;
+    word-break: break-word;
+  }
+  .cue-text.prep { color: var(--turf); }
+  .cue-text.go { color: var(--accent); }
+  .cue-text.listen {
+    color: var(--turf);
+    font-size: clamp(1.1rem, 5vw, 1.4rem);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    animation: breathe 1.8s ease-in-out infinite;
+  }
+  @keyframes breathe {
+    0%, 100% { opacity: 0.55; }
+    50% { opacity: 1; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .cue-text.listen { animation: none; }
+  }
+
+  #intervalField.disabled-field { opacity: 0.45; pointer-events: none; }
+
+  .cue-pulse { animation: pulse-in 0.32s ease; }
+  @keyframes pulse-in {
+    0% { transform: scale(0.82); opacity: 0.3; }
+    60% { transform: scale(1.05); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .cue-pulse { animation: none; }
+  }
+
+  .run-sub {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    min-height: 1.2em;
+  }
+
+  .run-controls {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+  }
+  .run-controls .btn { flex: 1; }
+
+  .complete-block { display: none; flex-direction: column; gap: 14px; align-items: center; text-align: center; }
+  .complete-block.show { display: flex; }
+  .complete-block .display { font-size: 1.5rem; color: var(--turf); }
+  .complete-stats {
+    display: flex;
+    gap: 22px;
+  }
+  .complete-stats div { display: flex; flex-direction: column; }
+  .complete-stats .num {
+    font-family: "Anton", sans-serif;
+    font-size: 1.6rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .complete-stats .lbl {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+  }
+  .complete-actions { display: flex; gap: 10px; width: 100%; }
+  .complete-actions .btn { flex: 1; }
+
+  .hidden { display: none !important; }
+
+  footer.note {
+    text-align: center;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    padding: 2px 10px 0;
+  }
+</style>
+
+<div class="app">
+  <div class="app-header">
+    <div class="display wordmark">Voice<span>Cue</span></div>
+    <div class="tagline">Reaction &amp; scan drills for the pitch</div>
+  </div>
+
+  <!-- HOME -->
+  <section id="view-home" class="view active">
+    <div class="card" id="micSettingCard" style="padding: 14px 16px;">
+      <div class="switch-row">
+        <div>
+          <div class="field-label" style="margin-bottom:2px;">Microphone</div>
+          <div class="field-hint" id="micStatus">Off &mdash; needed for "Call for it" drills</div>
+        </div>
+        <button type="button" class="switch" id="micToggle" aria-label="Turn microphone access on or off"></button>
+      </div>
+    </div>
+
+    <button class="btn btn-primary btn-block" id="btnNewDrill">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      New Drill
+    </button>
+
+    <div class="card" id="drillListCard">
+      <div id="emptyState" class="empty-state hidden">
+        <div class="display">No drills on the board yet</div>
+        <p>Build a drill&nbsp;&mdash; direction calls, numbers to flash, anything you want called out at your own pace and reps.</p>
+        <button class="btn btn-secondary" id="btnQuickStart">Quick start: Left / Right</button>
+      </div>
+      <div class="drill-list" id="drillList" style="padding: 12px;"></div>
+    </div>
+  </section>
+
+  <!-- BUILDER -->
+  <section id="view-builder" class="view">
+    <div class="view-head">
+      <button class="btn-ghost" id="btnBuilderBack" aria-label="Back">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <h2 id="builderTitle">New Drill</h2>
+    </div>
+
+    <div class="card">
+      <div class="field-group">
+        <div class="field-label">Drill name</div>
+        <input type="text" id="drillName" placeholder="e.g. Left / Right Reaction" maxlength="40">
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="field-group">
+        <div class="field-label">Cues to call out</div>
+        <div class="field-hint">Each rep calls one of these at random.</div>
+        <div class="chip-row" id="cueChips"></div>
+        <div class="add-cue-row">
+          <input type="text" id="cueInput" placeholder="Type a word or number" maxlength="16">
+          <button id="btnAddCue" type="button">Add</button>
+        </div>
+        <div class="chip-row" id="cueSuggestions"></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="field-group">
+        <div class="field-label">Trigger</div>
+        <div class="radio-row" id="triggerRow">
+          <button type="button" class="radio-pill" data-trigger="timer">Timer</button>
+          <button type="button" class="radio-pill" data-trigger="call">Call for it</button>
+        </div>
+        <div class="field-hint" id="triggerHint">Cues fire on a fixed clock.</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="field-group">
+        <div class="row-2">
+          <div id="intervalField">
+            <div class="field-label">Interval (sec)</div>
+            <input type="number" id="drillInterval" min="0.5" step="0.5" value="2.5">
+          </div>
+          <div>
+            <div class="field-label">Reps</div>
+            <input type="number" id="drillReps" min="1" step="1" value="15">
+          </div>
+        </div>
+        <div class="field-hint" id="repsHint">Time between cues, and how many total.</div>
+      </div>
+
+      <div class="field-group hidden" id="callSettings">
+        <div class="field-label">Mic sensitivity</div>
+        <div class="slider-label-row"><span>Needs a loud shout</span><span>Picks up almost anything</span></div>
+        <input type="range" id="sensitivityRange" min="0" max="100" step="5" value="55">
+        <div class="field-hint">Listens for a shout, clap, or whistle &mdash; it doesn't need to understand words. Works fine with AirPods in, though your phone will ask for microphone access the first time, and some phones drop audio quality slightly while the mic is listening.</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="field-group">
+        <div class="field-label">Prep countdown (sec)</div>
+        <input type="number" id="drillPrep" min="0" step="1" value="3">
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="field-group">
+        <div class="field-label">Cue order</div>
+        <div class="radio-row" id="orderRow">
+          <button type="button" class="radio-pill" data-order="random">Random</button>
+          <button type="button" class="radio-pill" data-order="norepeat">No repeats</button>
+        </div>
+        <div class="field-hint" id="orderHint">Fully random &mdash; the same cue can come up back-to-back.</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="field-group">
+        <div class="field-label">How to deliver each cue</div>
+        <div class="radio-row" id="deliveryRow">
+          <button type="button" class="radio-pill on" data-mode="both">Voice + Text</button>
+          <button type="button" class="radio-pill" data-mode="voice">Voice only</button>
+          <button type="button" class="radio-pill" data-mode="text">Text only</button>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="field-group">
+        <div class="field-label">Voice</div>
+        <select id="voiceSelect"></select>
+
+        <div class="slider-label-row" style="margin-top:6px;"><span>Speaking rate</span><span id="rateVal">1.0x</span></div>
+        <input type="range" id="rateRange" min="0.6" max="1.4" step="0.05" value="1">
+
+        <div class="slider-label-row"><span>Volume</span><span id="volVal">100%</span></div>
+        <input type="range" id="volRange" min="0" max="1" step="0.05" value="1">
+      </div>
+
+      <div class="validation-msg" id="builderError">Add at least one cue before saving.</div>
+
+      <div class="builder-actions">
+        <button class="btn btn-secondary" id="btnBuilderCancel">Cancel</button>
+        <button class="btn btn-primary" id="btnBuilderSave">Save Drill</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- RUN -->
+  <section id="view-run" class="view">
+    <div class="view-head">
+      <button class="btn-ghost" id="btnRunBack" aria-label="Back">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <h2 id="runDrillName">Drill</h2>
+    </div>
+
+    <div class="card">
+      <div id="runActive">
+        <div class="run-top">
+          <div class="drill-title">In progress</div>
+          <div class="rep-count" id="repCount">0 / 0</div>
+        </div>
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+        <div class="cue-stage">
+          <div class="cue-text prep" id="cueText">Ready</div>
+        </div>
+        <div class="run-sub" id="runSub">Tap start when you're set</div>
+
+        <div class="run-controls">
+          <button class="btn btn-secondary" id="btnPause">Pause</button>
+          <button class="btn btn-danger" id="btnEnd" style="flex:0.7; background: var(--surface-2); color: var(--danger);">End</button>
+        </div>
+      </div>
+
+      <div class="complete-block" id="completeBlock">
+        <div class="display">Session complete</div>
+        <div class="complete-stats">
+          <div><span class="num" id="statReps">0</span><span class="lbl">Reps called</span></div>
+          <div><span class="num" id="statTime">0:00</span><span class="lbl">Total time</span></div>
+        </div>
+        <div class="complete-actions">
+          <button class="btn btn-secondary" id="btnBackHome2">Back to drills</button>
+          <button class="btn btn-primary" id="btnRunAgain">Run again</button>
+        </div>
+      </div>
+
+      <div class="complete-block" id="micErrorBlock">
+        <div class="display" style="color: var(--danger);">Mic access needed</div>
+        <p class="field-hint" id="micErrorMsg" style="text-align:center;">This drill uses "Call for it" mode, which needs microphone access to hear you call. Allow it in your browser, or switch this drill to Timer mode.</p>
+        <div class="complete-actions">
+          <button class="btn btn-secondary" id="btnMicErrorBack">Back to drills</button>
+          <button class="btn btn-primary" id="btnMicErrorRetry">Try again</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="note">Cues fire even with the screen dimmed on most phones &mdash; keep your volume up.</footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var STORAGE_KEY = "vct_drills_v1";
+  var MIC_KEY = "vct_mic_enabled_v1";
+  var SUGGESTIONS = ["Left", "Right", "Turn", "Man On", "Time", "Switch", "Shoot"];
+
+  /* ---------------- storage ---------------- */
+  function loadDrills() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) { return []; }
+  }
+  function saveDrills(list) {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); } catch (e) {}
+  }
+  function loadMicEnabled() {
+    try { return localStorage.getItem(MIC_KEY) === "1"; } catch (e) { return false; }
+  }
+  function saveMicEnabled(val) {
+    try { localStorage.setItem(MIC_KEY, val ? "1" : "0"); } catch (e) {}
+  }
+
+  var drills = loadDrills();
+  var micEnabled = loadMicEnabled();
+
+  /* ---------------- view switching ---------------- */
+  function showView(name) {
+    ["home", "builder", "run"].forEach(function (v) {
+      document.getElementById("view-" + v).classList.toggle("active", v === name);
+    });
+  }
+
+  /* ---------------- home ---------------- */
+  function fmtSeconds(s) {
+    return (Math.round(s * 10) / 10).toString().replace(/\.0$/, "");
+  }
+
+  function renderHome() {
+    var listEl = document.getElementById("drillList");
+    var emptyEl = document.getElementById("emptyState");
+    listEl.innerHTML = "";
+    if (drills.length === 0) {
+      emptyEl.classList.remove("hidden");
+      return;
+    }
+    emptyEl.classList.add("hidden");
+    drills.forEach(function (d) {
+      var card = document.createElement("div");
+      card.className = "drill-card";
+      var cuesLabel = d.cues.join(" · ");
+      var paceLabel = d.triggerMode === "call"
+        ? "call for it &times; " + d.reps + " reps"
+        : "every " + fmtSeconds(d.interval) + "s &times; " + d.reps + " reps";
+      card.innerHTML =
+        '<button class="play-btn" aria-label="Start ' + escapeHtml(d.name) + '">' +
+          '<svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>' +
+        '</button>' +
+        '<div class="info">' +
+          '<p class="name">' + escapeHtml(d.name) + '</p>' +
+          '<p class="meta">' + escapeHtml(cuesLabel) + ' &mdash; ' + paceLabel + '</p>' +
+        '</div>' +
+        '<div class="actions">' +
+          '<button class="btn-ghost editBtn" aria-label="Edit ' + escapeHtml(d.name) + '">' +
+            '<svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>' +
+          '</button>' +
+          '<button class="btn-danger deleteBtn" aria-label="Delete ' + escapeHtml(d.name) + '">' +
+            '<svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>' +
+          '</button>' +
+        '</div>';
+      card.querySelector(".play-btn").addEventListener("click", function () { startDrill(d); });
+      card.querySelector(".editBtn").addEventListener("click", function () { openBuilder(d); });
+      card.querySelector(".deleteBtn").addEventListener("click", function () {
+        drills = drills.filter(function (x) { return x.id !== d.id; });
+        saveDrills(drills);
+        renderHome();
+      });
+      listEl.appendChild(card);
+    });
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  document.getElementById("btnQuickStart").addEventListener("click", function () {
+    var d = {
+      id: "d_" + Date.now(),
+      name: "Left / Right Reaction",
+      cues: ["Left", "Right"],
+      interval: 2,
+      reps: 15,
+      prep: 3,
+      avoidRepeat: false,
+      mode: "both",
+      triggerMode: "timer",
+      sensitivity: 55,
+      rate: 1,
+      volume: 1,
+      voiceName: null
+    };
+    drills.push(d);
+    saveDrills(drills);
+    renderHome();
+  });
+
+  /* ---------------- microphone setting ---------------- */
+  function updateMicToggleUI(statusText) {
+    document.getElementById("micToggle").classList.toggle("on", micEnabled);
+    document.getElementById("micStatus").textContent =
+      statusText || (micEnabled ? "On — ready for “Call for it” drills" : "Off — needed for “Call for it” drills");
+  }
+
+  function enableMicSetting(onSuccess, onFail) {
+    requestMicAccess().then(function (stream) {
+      stream.getTracks().forEach(function (t) { t.stop(); }); // only verifying access, not listening yet
+      micEnabled = true;
+      saveMicEnabled(true);
+      updateMicToggleUI();
+      if (onSuccess) onSuccess();
+    }).catch(function (err) {
+      micEnabled = false;
+      saveMicEnabled(false);
+      updateMicToggleUI("Blocked — allow microphone access in your browser's site settings");
+      if (onFail) onFail(err);
+    });
+  }
+
+  document.getElementById("micToggle").addEventListener("click", function () {
+    if (micEnabled) {
+      micEnabled = false;
+      saveMicEnabled(false);
+      updateMicToggleUI();
+    } else {
+      updateMicToggleUI("Requesting access…");
+      enableMicSetting();
+    }
+  });
+
+  updateMicToggleUI();
+  // If the browser exposes live permission state, reflect an externally-revoked
+  // permission even though our own stored setting still says "on".
+  if (navigator.permissions && navigator.permissions.query) {
+    navigator.permissions.query({ name: "microphone" }).then(function (status) {
+      function sync() {
+        if (micEnabled && status.state === "denied") {
+          micEnabled = false;
+          saveMicEnabled(false);
+          updateMicToggleUI("Blocked — allow microphone access in your browser's site settings");
+        }
+      }
+      sync();
+      status.onchange = sync;
+    }).catch(function () {});
+  }
+
+  /* ---------------- builder ---------------- */
+  var builderCues = [];
+  var builderMode = "both";
+  var editingId = null;
+
+  function renderChips() {
+    var wrap = document.getElementById("cueChips");
+    wrap.innerHTML = "";
+    builderCues.forEach(function (word, idx) {
+      var chip = document.createElement("span");
+      chip.className = "chip";
+      chip.innerHTML = escapeHtml(word) +
+        '<button type="button" aria-label="Remove ' + escapeHtml(word) + '">' +
+        '<svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>';
+      chip.querySelector("button").addEventListener("click", function () {
+        builderCues.splice(idx, 1);
+        renderChips();
+      });
+      wrap.appendChild(chip);
+    });
+  }
+
+  function renderSuggestions() {
+    var wrap = document.getElementById("cueSuggestions");
+    wrap.innerHTML = "";
+    SUGGESTIONS.forEach(function (word) {
+      if (builderCues.indexOf(word) !== -1) return;
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "chip-suggest";
+      btn.textContent = "+ " + word;
+      btn.addEventListener("click", function () {
+        builderCues.push(word);
+        renderChips();
+        renderSuggestions();
+      });
+      wrap.appendChild(btn);
+    });
+  }
+
+  function addCueFromInput() {
+    var input = document.getElementById("cueInput");
+    var val = input.value.trim();
+    if (!val) return;
+    if (builderCues.indexOf(val) === -1) builderCues.push(val);
+    input.value = "";
+    renderChips();
+    renderSuggestions();
+  }
+  document.getElementById("btnAddCue").addEventListener("click", addCueFromInput);
+  document.getElementById("cueInput").addEventListener("keydown", function (e) {
+    if (e.key === "Enter") { e.preventDefault(); addCueFromInput(); }
+  });
+
+  var builderTrigger = "timer";
+  var TRIGGER_HINTS = {
+    timer: "Cues fire on a fixed clock.",
+    call: "Cues fire when you call for it &mdash; shout, clap, or whistle."
+  };
+  document.getElementById("triggerRow").addEventListener("click", function (e) {
+    var btn = e.target.closest(".radio-pill");
+    if (!btn) return;
+    builderTrigger = btn.getAttribute("data-trigger");
+    Array.prototype.forEach.call(this.querySelectorAll(".radio-pill"), function (p) {
+      p.classList.toggle("on", p === btn);
+    });
+    document.getElementById("triggerHint").innerHTML = TRIGGER_HINTS[builderTrigger];
+    var isCall = builderTrigger === "call";
+    document.getElementById("intervalField").classList.toggle("disabled-field", isCall);
+    document.getElementById("callSettings").classList.toggle("hidden", !isCall);
+    document.getElementById("repsHint").textContent = isCall
+      ? "How many total (interval is unused in Call mode)."
+      : "Time between cues, and how many total.";
+  });
+
+  var avoidRepeatOn = false;
+  var ORDER_HINTS = {
+    random: "Fully random &mdash; the same cue can come up back-to-back.",
+    norepeat: "Won't call the same cue twice in a row."
+  };
+  document.getElementById("orderRow").addEventListener("click", function (e) {
+    var btn = e.target.closest(".radio-pill");
+    if (!btn) return;
+    var order = btn.getAttribute("data-order");
+    avoidRepeatOn = order === "norepeat";
+    Array.prototype.forEach.call(this.querySelectorAll(".radio-pill"), function (p) {
+      p.classList.toggle("on", p === btn);
+    });
+    document.getElementById("orderHint").innerHTML = ORDER_HINTS[order];
+  });
+
+  document.getElementById("deliveryRow").addEventListener("click", function (e) {
+    var btn = e.target.closest(".radio-pill");
+    if (!btn) return;
+    builderMode = btn.getAttribute("data-mode");
+    Array.prototype.forEach.call(this.querySelectorAll(".radio-pill"), function (p) {
+      p.classList.toggle("on", p === btn);
+    });
+  });
+
+  /* voices */
+  var cachedVoices = [];
+  function populateVoices(selectedName) {
+    cachedVoices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+    var sel = document.getElementById("voiceSelect");
+    sel.innerHTML = "";
+    if (cachedVoices.length === 0) {
+      var opt = document.createElement("option");
+      opt.textContent = "Device default";
+      opt.value = "";
+      sel.appendChild(opt);
+      return;
+    }
+    cachedVoices.forEach(function (v, i) {
+      var opt = document.createElement("option");
+      opt.value = v.name;
+      opt.textContent = v.name + " (" + v.lang + ")";
+      if (selectedName ? v.name === selectedName : i === 0) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  }
+  if (window.speechSynthesis) {
+    populateVoices();
+    window.speechSynthesis.onvoiceschanged = function () { populateVoices(); };
+  }
+
+  document.getElementById("rateRange").addEventListener("input", function () {
+    document.getElementById("rateVal").textContent = parseFloat(this.value).toFixed(2).replace(/0$/, "") + "x";
+  });
+  document.getElementById("volRange").addEventListener("input", function () {
+    document.getElementById("volVal").textContent = Math.round(this.value * 100) + "%";
+  });
+
+  function openBuilder(existing) {
+    editingId = existing ? existing.id : null;
+    document.getElementById("builderTitle").textContent = existing ? "Edit Drill" : "New Drill";
+    document.getElementById("drillName").value = existing ? existing.name : "";
+    builderCues = existing ? existing.cues.slice() : [];
+    document.getElementById("drillInterval").value = existing ? existing.interval : 2.5;
+    document.getElementById("drillReps").value = existing ? existing.reps : 15;
+    document.getElementById("drillPrep").value = existing ? existing.prep : 3;
+    builderTrigger = existing ? (existing.triggerMode || "timer") : "timer";
+    document.getElementById("sensitivityRange").value = existing ? (existing.sensitivity != null ? existing.sensitivity : 55) : 55;
+    Array.prototype.forEach.call(document.querySelectorAll("#triggerRow .radio-pill"), function (p) {
+      p.classList.toggle("on", p.getAttribute("data-trigger") === builderTrigger);
+    });
+    document.getElementById("triggerHint").innerHTML = TRIGGER_HINTS[builderTrigger];
+    var isCall = builderTrigger === "call";
+    document.getElementById("intervalField").classList.toggle("disabled-field", isCall);
+    document.getElementById("callSettings").classList.toggle("hidden", !isCall);
+    document.getElementById("repsHint").textContent = isCall
+      ? "How many total (interval is unused in Call mode)."
+      : "Time between cues, and how many total.";
+    avoidRepeatOn = existing ? !!existing.avoidRepeat : false;
+    var orderKey = avoidRepeatOn ? "norepeat" : "random";
+    Array.prototype.forEach.call(document.querySelectorAll("#orderRow .radio-pill"), function (p) {
+      p.classList.toggle("on", p.getAttribute("data-order") === orderKey);
+    });
+    document.getElementById("orderHint").innerHTML = ORDER_HINTS[orderKey];
+    builderMode = existing ? existing.mode : "both";
+    Array.prototype.forEach.call(document.querySelectorAll(".radio-pill"), function (p) {
+      p.classList.toggle("on", p.getAttribute("data-mode") === builderMode);
+    });
+    document.getElementById("rateRange").value = existing ? existing.rate : 1;
+    document.getElementById("rateVal").textContent = (existing ? existing.rate : 1).toFixed(2).replace(/0$/, "") + "x";
+    document.getElementById("volRange").value = existing ? existing.volume : 1;
+    document.getElementById("volVal").textContent = Math.round((existing ? existing.volume : 1) * 100) + "%";
+    populateVoices(existing ? existing.voiceName : null);
+    document.getElementById("builderError").classList.remove("show");
+    renderChips();
+    renderSuggestions();
+    showView("builder");
+  }
+
+  document.getElementById("btnNewDrill").addEventListener("click", function () { openBuilder(null); });
+  document.getElementById("btnBuilderBack").addEventListener("click", function () { showView("home"); });
+  document.getElementById("btnBuilderCancel").addEventListener("click", function () { showView("home"); });
+
+  document.getElementById("btnBuilderSave").addEventListener("click", function () {
+    if (builderCues.length === 0) {
+      document.getElementById("builderError").classList.add("show");
+      return;
+    }
+    document.getElementById("builderError").classList.remove("show");
+    var name = document.getElementById("drillName").value.trim() || "Untitled Drill";
+    var interval = Math.max(0.5, parseFloat(document.getElementById("drillInterval").value) || 2.5);
+    var reps = Math.max(1, parseInt(document.getElementById("drillReps").value, 10) || 15);
+    var prep = Math.max(0, parseInt(document.getElementById("drillPrep").value, 10) || 0);
+    var voiceSel = document.getElementById("voiceSelect");
+    var d = {
+      id: editingId || ("d_" + Date.now()),
+      name: name,
+      cues: builderCues.slice(),
+      interval: interval,
+      reps: reps,
+      prep: prep,
+      avoidRepeat: avoidRepeatOn,
+      mode: builderMode,
+      triggerMode: builderTrigger,
+      sensitivity: parseFloat(document.getElementById("sensitivityRange").value),
+      rate: parseFloat(document.getElementById("rateRange").value),
+      volume: parseFloat(document.getElementById("volRange").value),
+      voiceName: voiceSel.value || null
+    };
+    if (editingId) {
+      drills = drills.map(function (x) { return x.id === editingId ? d : x; });
+    } else {
+      drills.push(d);
+    }
+    saveDrills(drills);
+    renderHome();
+    showView("home");
+  });
+
+  /* ---------------- run controller ---------------- */
+  var run = {
+    drill: null,
+    repIndex: 0,
+    lastCue: null,
+    timerHandle: null,
+    fireAt: 0,
+    remaining: 0,
+    paused: false,
+    startedAt: 0,
+    wakeLock: null,
+    phase: "idle", // idle | prep | running | done
+    micStream: null,
+    audioCtx: null,
+    analyser: null,
+    freqData: null,
+    rafId: null,
+    coolingDown: false,
+    threshold: 0.18
+  };
+
+  function sensitivityToThreshold(sensitivity) {
+    // sensitivity 0 (needs a loud shout) .. 100 (picks up almost anything)
+    var minT = 0.05, maxT = 0.35;
+    var s = Math.max(0, Math.min(100, sensitivity == null ? 55 : sensitivity));
+    return maxT - (s / 100) * (maxT - minT);
+  }
+
+  function speak(text) {
+    if (!window.speechSynthesis) return;
+    try {
+      var u = new SpeechSynthesisUtterance(text);
+      var v = cachedVoices.filter(function (x) { return x.name === run.drill.voiceName; })[0];
+      if (v) u.voice = v;
+      u.rate = run.drill.rate || 1;
+      u.volume = run.drill.volume === undefined ? 1 : run.drill.volume;
+      window.speechSynthesis.speak(u);
+    } catch (e) {
+      // Never let a speech-engine hiccup kill the cue timer.
+    }
+  }
+
+  function unlockAudio() {
+    if (!window.speechSynthesis) return;
+    try {
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(" ");
+      u.volume = 0.01;
+      window.speechSynthesis.speak(u);
+    } catch (e) {}
+  }
+
+  function requestWakeLock() {
+    if ("wakeLock" in navigator) {
+      navigator.wakeLock.request("screen").then(function (lock) { run.wakeLock = lock; }).catch(function () {});
+    }
+  }
+  function releaseWakeLock() {
+    if (run.wakeLock) { run.wakeLock.release().catch(function () {}); run.wakeLock = null; }
+  }
+
+  /* ---- "Call for it" (sound-triggered) mode ---- */
+  function requestMicAccess() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      return Promise.reject(new Error("Microphone access isn't supported in this browser."));
+    }
+    return navigator.mediaDevices.getUserMedia({ audio: true });
+  }
+
+  function setupListening(stream) {
+    var Ctx = window.AudioContext || window.webkitAudioContext;
+    run.micStream = stream;
+    run.audioCtx = new Ctx();
+    var source = run.audioCtx.createMediaStreamSource(stream);
+    run.analyser = run.audioCtx.createAnalyser();
+    run.analyser.fftSize = 512;
+    source.connect(run.analyser);
+    run.freqData = new Uint8Array(run.analyser.fftSize);
+    run.threshold = sensitivityToThreshold(run.drill.sensitivity);
+  }
+
+  function currentRms() {
+    run.analyser.getByteTimeDomainData(run.freqData);
+    var sum = 0;
+    for (var i = 0; i < run.freqData.length; i++) {
+      var v = (run.freqData[i] - 128) / 128;
+      sum += v * v;
+    }
+    return Math.sqrt(sum / run.freqData.length);
+  }
+
+  function listenLoop() {
+    if (run.phase !== "running" || run.drill.triggerMode !== "call") return;
+    if (!run.paused && !run.coolingDown) {
+      var rms = currentRms();
+      if (rms > run.threshold) {
+        fireCue();
+        run.rafId = requestAnimationFrame(listenLoop);
+        return;
+      }
+    }
+    run.rafId = requestAnimationFrame(listenLoop);
+  }
+
+  function stopListenLoop() {
+    if (run.rafId) { cancelAnimationFrame(run.rafId); run.rafId = null; }
+  }
+
+  function releaseMic() {
+    stopListenLoop();
+    if (run.micStream) {
+      run.micStream.getTracks().forEach(function (t) { t.stop(); });
+      run.micStream = null;
+    }
+    if (run.audioCtx) {
+      run.audioCtx.close().catch(function () {});
+      run.audioCtx = null;
+    }
+    run.analyser = null;
+  }
+
+  function setListeningUI() {
+    setCueText("Listening…", "listen", false);
+    document.getElementById("runSub").textContent = "Call for it — whistle, clap, or shout";
+  }
+
+  function showMicPrompt(kind) {
+    document.getElementById("micErrorMsg").textContent = kind === "off"
+      ? "This drill uses “Call for it” mode, which listens through the mic. Turn on microphone access to use it."
+      : "Microphone access was blocked. Allow it in your browser's site settings, or switch this drill to Timer mode.";
+    var btn = document.getElementById("btnMicErrorRetry");
+    btn.textContent = kind === "off" ? "Turn on microphone" : "Try again";
+    btn.setAttribute("data-kind", kind);
+    document.getElementById("runActive").style.display = "none";
+    document.getElementById("micErrorBlock").classList.add("show");
+  }
+
+  function armCooldown(minMs, onDone) {
+    run.coolingDown = true;
+    var start = Date.now();
+    (function check() {
+      var speaking = window.speechSynthesis && window.speechSynthesis.speaking;
+      var elapsed = Date.now() - start;
+      if ((!speaking && elapsed >= minMs) || elapsed > 5000) {
+        run.coolingDown = false;
+        if (onDone) onDone();
+        return;
+      }
+      setTimeout(check, 150);
+    })();
+  }
+
+  function setCueText(text, cls, pulse) {
+    var el = document.getElementById("cueText");
+    el.textContent = text;
+    el.className = "cue-text" + (cls ? " " + cls : "");
+    if (pulse) {
+      el.classList.remove("cue-pulse");
+      void el.offsetWidth;
+      el.classList.add("cue-pulse");
+    }
+  }
+
+  function pickCue() {
+    var cues = run.drill.cues;
+    if (cues.length === 1) return cues[0];
+    var choice;
+    do {
+      choice = cues[Math.floor(Math.random() * cues.length)];
+    } while (run.drill.avoidRepeat && choice === run.lastCue);
+    return choice;
+  }
+
+  function startDrill(drill) {
+    run.drill = drill;
+    run.repIndex = 0;
+    run.lastCue = null;
+    run.paused = false;
+    run.coolingDown = false;
+    document.getElementById("runDrillName").textContent = drill.name;
+    document.getElementById("repCount").textContent = "0 / " + drill.reps;
+    document.getElementById("progressFill").style.width = "0%";
+    document.getElementById("runActive").style.display = "";
+    document.getElementById("completeBlock").classList.remove("show");
+    document.getElementById("micErrorBlock").classList.remove("show");
+    document.getElementById("btnPause").textContent = "Pause";
+    document.getElementById("btnPause").disabled = false;
+    document.getElementById("runSub").textContent = "Get ready…";
+    showView("run");
+
+    unlockAudio();
+
+    if (drill.triggerMode === "call") {
+      run.phase = "prep";
+      setCueText("Ready", "prep", false);
+      if (!micEnabled) {
+        showMicPrompt("off");
+        return;
+      }
+      document.getElementById("runSub").textContent = "Checking microphone access…";
+      requestMicAccess().then(function (stream) {
+        setupListening(stream);
+        requestWakeLock();
+        runPrepCountdown(drill);
+      }).catch(function () {
+        showMicPrompt("denied");
+      });
+    } else {
+      requestWakeLock();
+      run.phase = "prep";
+      runPrepCountdown(drill);
+    }
+  }
+
+  function runPrepCountdown(drill) {
+    var prepLeft = drill.prep;
+    setCueText(prepLeft > 0 ? String(prepLeft) : "GO", "prep", true);
+
+    if (prepLeft <= 0) {
+      beginReps();
+      return;
+    }
+    var prepTimer = setInterval(function () {
+      prepLeft--;
+      if (prepLeft > 0) {
+        setCueText(String(prepLeft), "prep", true);
+      } else {
+        setCueText("GO", "go", true);
+        clearInterval(prepTimer);
+        setTimeout(beginReps, 500);
+      }
+    }, 1000);
+    run.prepTimer = prepTimer;
+  }
+
+  function beginReps() {
+    run.phase = "running";
+    run.startedAt = Date.now();
+    document.getElementById("runSub").textContent = "";
+    if (run.drill.triggerMode === "call") {
+      setListeningUI();
+      listenLoop();
+    } else {
+      fireCue();
+    }
+  }
+
+  function fireCue() {
+    if (run.repIndex >= run.drill.reps) { finishDrill(); return; }
+    var cue = pickCue();
+    run.lastCue = cue;
+    run.repIndex++;
+    document.getElementById("repCount").textContent = run.repIndex + " / " + run.drill.reps;
+    document.getElementById("progressFill").style.width = (run.repIndex / run.drill.reps * 100) + "%";
+
+    if (run.drill.mode === "voice" ) {
+      setCueText("●", "go", true);
+    } else {
+      setCueText(cue, "go", true);
+    }
+    if (run.drill.mode !== "text") speak(cue);
+    if (navigator.vibrate) { try { navigator.vibrate(60); } catch (e) {} }
+
+    if (run.drill.triggerMode === "call") {
+      if (run.repIndex >= run.drill.reps) {
+        setTimeout(finishDrill, 1000);
+      } else {
+        armCooldown(900, function () {
+          if (run.phase === "running") setListeningUI();
+        });
+      }
+    } else if (run.repIndex < run.drill.reps) {
+      scheduleNext(run.drill.interval * 1000);
+    } else {
+      setTimeout(finishDrill, Math.min(900, run.drill.interval * 1000));
+    }
+  }
+
+  function scheduleNext(delayMs) {
+    run.fireAt = Date.now() + delayMs;
+    run.timerHandle = setTimeout(fireCue, delayMs);
+  }
+
+  function finishDrill() {
+    run.phase = "done";
+    releaseWakeLock();
+    releaseMic();
+    var totalMs = Date.now() - run.startedAt;
+    var totalSec = Math.max(0, Math.round(totalMs / 1000));
+    document.getElementById("statReps").textContent = run.repIndex;
+    document.getElementById("statTime").textContent =
+      Math.floor(totalSec / 60) + ":" + String(totalSec % 60).padStart(2, "0");
+    document.getElementById("runActive").style.display = "none";
+    document.getElementById("completeBlock").classList.add("show");
+  }
+
+  function stopDrillEarly() {
+    if (run.prepTimer) clearInterval(run.prepTimer);
+    if (run.timerHandle) clearTimeout(run.timerHandle);
+    releaseWakeLock();
+    releaseMic();
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    run.phase = "idle";
+  }
+
+  document.getElementById("btnPause").addEventListener("click", function () {
+    if (run.phase !== "running") return;
+    var isCall = run.drill.triggerMode === "call";
+    if (!run.paused) {
+      run.paused = true;
+      if (!isCall && run.timerHandle) { clearTimeout(run.timerHandle); run.remaining = run.fireAt - Date.now(); }
+      this.textContent = "Resume";
+      document.getElementById("runSub").textContent = "Paused";
+    } else {
+      run.paused = false;
+      this.textContent = "Pause";
+      if (isCall) {
+        setListeningUI();
+      } else {
+        document.getElementById("runSub").textContent = "";
+        scheduleNext(Math.max(50, run.remaining));
+      }
+    }
+  });
+
+  document.getElementById("btnEnd").addEventListener("click", function () {
+    stopDrillEarly();
+    showView("home");
+  });
+  document.getElementById("btnRunBack").addEventListener("click", function () {
+    stopDrillEarly();
+    showView("home");
+  });
+  document.getElementById("btnBackHome2").addEventListener("click", function () { showView("home"); });
+  document.getElementById("btnRunAgain").addEventListener("click", function () { startDrill(run.drill); });
+  document.getElementById("btnMicErrorBack").addEventListener("click", function () { showView("home"); });
+  document.getElementById("btnMicErrorRetry").addEventListener("click", function () {
+    var kind = this.getAttribute("data-kind");
+    document.getElementById("micErrorBlock").classList.remove("show");
+    document.getElementById("runActive").style.display = "";
+    if (kind === "off") {
+      setCueText("Ready", "prep", false);
+      document.getElementById("runSub").textContent = "Requesting microphone access…";
+      enableMicSetting(function () { startDrill(run.drill); }, function () { showMicPrompt("denied"); });
+      return;
+    }
+    startDrill(run.drill);
+  });
+
+  /* ---------------- init ---------------- */
+  renderHome();
+})();
+</script>
